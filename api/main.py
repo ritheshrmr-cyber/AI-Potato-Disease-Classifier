@@ -16,7 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MODEL = tf.keras.models.load_model("potato_model.keras")
+MODEL = tf.keras.models.load_model("potatoes.h5")
 CLASS_NAMES=["Early Blight","Late Blight","Healthy","not_a_potato_leaf","not_potato"]
 @app.get("/ping")
 async def ping():
@@ -36,4 +36,4 @@ async def predict(file: UploadFile = File(...)):
         "confidence":float(confidence)
     }
 if __name__=="__main__":
-    uvicorn.run(app,host="localhost",port=8001)
+    uvicorn.run(app,host="0.0.0.0",port=10000)
