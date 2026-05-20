@@ -27,3 +27,9 @@ A Deep Learning web application to detect potato leaf diseases and identify non-
 ### Backend
 ```bash
 uvicorn api.main:app --reload
+
+
+### Frontend
+cd frontend
+npm install
+npm start
