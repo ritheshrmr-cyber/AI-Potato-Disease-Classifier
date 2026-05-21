@@ -262,7 +262,7 @@ export const ImageUpload = () => {
                         <TableCell component="th" scope="row" className={classes.tableCell}>
                           {data.class}
                         </TableCell>
-                        <TableCell align="right" className={classes.tableCell}>{confidence}%</TableCell>
+                        <TableCell align="right" className={classes.tableCell}>{(data.confidence * 100).toFixed(2)}%</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
