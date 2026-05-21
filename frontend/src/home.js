@@ -156,9 +156,10 @@ export const ImageUpload = () => {
     if (image) {
       let formData = new FormData();
       formData.append("file", selectedFile);
+      await fetch("https://ai-potato-disease-classifier-1.onrender.com/ping");
       let res = await axios({
         method: "post",
-        url:"http://127.0.0.1:8000/predict",
+        url: "https://ai-potato-disease-classifier-1.onrender.com/predict",
         data: formData,
       });
       if (res.status === 200) {

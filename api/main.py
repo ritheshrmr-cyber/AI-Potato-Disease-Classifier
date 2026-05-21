@@ -27,6 +27,7 @@ def get_model():
 
 @app.get("/ping")
 async def ping():
+    get_model()
     return "hello"
 
 def read_file_as_image(data) -> np.ndarray:
