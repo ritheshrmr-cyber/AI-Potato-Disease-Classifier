@@ -1,8 +1,9 @@
+PlantVillage/
+training/
+dataset/
+*.ipynb
 __pycache__/
 *.pyc
+.DS_Store
+venv/
 .env
-frontend/node_modules/
-PlantVillage/
-*.keras
-*.h5
-.ipynb_checkpoints/
