@@ -164,7 +164,11 @@ export const ImageUpload = () => {
         data: formData,
       });
       if (res.status === 200) {
-        setData(res.data);
+        console.log("API RESPONSE:",res.data);
+        setData({
+          class: res.data.class,
+          confidence: res.data.confidence,  
+        });
       }
       setIsloading(false);
     }
