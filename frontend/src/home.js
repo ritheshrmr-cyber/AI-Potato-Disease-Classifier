@@ -154,6 +154,7 @@ export const ImageUpload = () => {
 
   const sendFile = async () => {
     if (image) {
+      setIsloading(true);
       let formData = new FormData();
       formData.append("file", selectedFile);
       await fetch("https://ai-potato-disease-classifier-1.onrender.com/ping");
