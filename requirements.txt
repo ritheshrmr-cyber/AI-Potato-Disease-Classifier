@@ -1,8 +1,8 @@
-tensorflow-cpu==2.16.1
+tensorflow==2.21.0
+keras==3.14.0
 fastapi
 uvicorn
 python-multipart
 Pillow
-matplotlib
 numpy
-
+matplotlib
