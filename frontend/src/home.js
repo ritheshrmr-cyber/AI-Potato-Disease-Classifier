@@ -15,9 +15,6 @@ import { DropzoneArea } from 'material-ui-dropzone';
 import { common } from '@material-ui/core/colors';
 import Clear from '@material-ui/icons/Clear';
 
-
-
-
 const ColorButton = withStyles((theme) => ({
   root: {
     color: theme.palette.getContrastText(common.white),
@@ -143,6 +140,7 @@ const useStyles = makeStyles((theme) => ({
     color: '#be6a77 !important',
   }
 }));
+
 export const ImageUpload = () => {
   const classes = useStyles();
   const [selectedFile, setSelectedFile] = useState();
@@ -157,14 +155,14 @@ export const ImageUpload = () => {
       setIsloading(true);
       let formData = new FormData();
       formData.append("file", selectedFile);
-      await fetch("https://ai-potato-disease-classifier-1.onrender.com/ping");
+      await fetch("https://onrender.com");
       let res = await axios({
         method: "post",
-        url: "https://ai-potato-disease-classifier-1.onrender.com/predict",
+        url: "https://onrender.com",
         data: formData,
       });
       if (res.status === 200) {
-        console.log("API RESPONSE:",res.data);
+        console.log("API RESPONSE:", res.data);
         setData({
           class: res.data.class,
           confidence: res.data.confidence,  
@@ -211,7 +209,13 @@ export const ImageUpload = () => {
   };
 
   if (data) {
-    confidence = (parseFloat(data.confidence) * 100).toFixed(2);
+    // Determine if confidence needs multiplication based on scale format
+    const parsedConfidence = parseFloat(data.confidence);
+    if (parsedConfidence <= 1.0) {
+      confidence = (parsedConfidence * 100).toFixed(2);
+    } else {
+      confidence = parsedConfidence.toFixed(2);
+    }
   }
 
   return (
@@ -266,7 +270,9 @@ export const ImageUpload = () => {
                         <TableCell component="th" scope="row" className={classes.tableCell}>
                           {data.class}
                         </TableCell>
-                        <TableCell align="right" className={classes.tableCell}>{(data.confidence * 100).toFixed(2)}%</TableCell>
+                        <TableCell align="right" className={classes.tableCell}>
+                          {confidence}%
+                        </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -282,7 +288,6 @@ export const ImageUpload = () => {
           </Grid>
           {data &&
             <Grid item className={classes.buttonGrid} >
-
               <ColorButton variant="contained" className={classes.clearButton} color="primary" component="span" size="large" onClick={clearData} startIcon={<Clear fontSize="large" />}>
                 Clear
               </ColorButton>
