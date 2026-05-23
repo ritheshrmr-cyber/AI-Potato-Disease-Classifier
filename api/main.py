@@ -20,7 +20,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MODEL = tf.keras.models.load_model("potato_model.keras")
+# --- START OF FIX ---
+# This custom wrapper removes 'quantization_config' before Keras attempts deserialization
+class SafeDense(tf.keras.layers.Dense):
+    @classmethod
+    def from_config(cls, config):
+        config.pop('quantization_config', None)
+        return super().from_config(config)
+
+# Load the model safely using the custom Dense layer mapping
+MODEL = tf.keras.models.load_model("potato_model.keras", custom_objects={'Dense': SafeDense})
+# --- END OF FIX ---
 
 CLASS_NAMES = ["Early Blight", "Late Blight", "Healthy","not_a_potato_leaf","not_potato"]
 
@@ -50,4 +60,3 @@ async def predict(
 
 if __name__ == "__main__":
     uvicorn.run(app, host='localhost', port=8000)
-
