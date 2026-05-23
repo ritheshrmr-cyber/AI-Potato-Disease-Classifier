@@ -24,7 +24,6 @@ const ColorButton = withStyles((theme) => ({
     },
   },
 }))(Button);
-const axios = require("axios").default;
 
 const useStyles = makeStyles((theme) => ({
   grow: {
@@ -151,26 +150,46 @@ export const ImageUpload = () => {
   let confidence = 0;
 
   const sendFile = async () => {
-    if (image) {
+    if (image && selectedFile) {
       setIsloading(true);
-      let formData = new FormData();
-      formData.append("file", selectedFile);
-      await fetch("https://onrender.com");
-      let res = await axios({
-        method: "post",
-        url: "https://onrender.com",
-        data: formData,
-      });
-      if (res.status === 200) {
-        console.log("API RESPONSE:", res.data);
-        setData({
-          class: res.data.class,
-          confidence: res.data.confidence,  
+      try {
+        let formData = new FormData();
+        
+        // Ensure we send the raw file object even if state contains an array wrap
+        const rawFile = Array.isArray(selectedFile) ? selectedFile[0] : selectedFile;
+        formData.append("file", rawFile);
+
+        // Ping the server to wake it up if it went cold
+        await fetch("https://onrender.com").catch(() => {});
+
+        // Process request using native fetch to avoid library mismatch bugs
+        const response = await fetch("https://onrender.com", {
+          method: "POST",
+          body: formData,
         });
+
+        if (!response.ok) {
+          throw new Error(`Server returned status: ${response.status}`);
+        }
+
+        const resData = await response.json();
+        console.log("API RESPONSE:", resData);
+
+        setData({
+          class: resData.class,
+          confidence: resData.confidence,  
+        });
+
+      } catch (error) {
+        console.error("Prediction failed:", error);
+        alert("Server communication error. Check if your backend crashed or has CORS issues on Render.");
+        setData(undefined);
+        setImage(false);
+      } finally {
+        setIsloading(false);
       }
-      setIsloading(false);
     }
-  }
+  };
 
   const clearData = () => {
     setData(null);
@@ -184,7 +203,8 @@ export const ImageUpload = () => {
       setPreview(undefined);
       return;
     }
-    const objectUrl = URL.createObjectURL(selectedFile);
+    const fileToPreview = Array.isArray(selectedFile) ? selectedFile[0] : selectedFile;
+    const objectUrl = URL.createObjectURL(fileToPreview);
     setPreview(objectUrl);
   }, [selectedFile]);
 
@@ -192,7 +212,6 @@ export const ImageUpload = () => {
     if (!preview) {
       return;
     }
-    setIsloading(true);
     sendFile();
   }, [preview]);
 
@@ -203,7 +222,7 @@ export const ImageUpload = () => {
       setData(undefined);
       return;
     }
-    // FIX: Extract the actual single file object from the array sequence
+    // Safely extract the raw file object from the array sequence
     setSelectedFile(files[0]);
     setData(undefined);
     setImage(true);
