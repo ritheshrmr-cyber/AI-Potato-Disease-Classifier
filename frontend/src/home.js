@@ -203,13 +203,13 @@ export const ImageUpload = () => {
       setData(undefined);
       return;
     }
+    // FIX: Extract the actual single file object from the array sequence
     setSelectedFile(files[0]);
     setData(undefined);
     setImage(true);
   };
 
   if (data) {
-    // Determine if confidence needs multiplication based on scale format
     const parsedConfidence = parseFloat(data.confidence);
     if (parsedConfidence <= 1.0) {
       confidence = (parsedConfidence * 100).toFixed(2);
