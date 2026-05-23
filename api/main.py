@@ -8,7 +8,7 @@ import tensorflow as tf
 
 app = FastAPI()
 
-origins = [
+origins = (
     "http://localhost",
     "http://localhost:3000",
 )
