@@ -20,10 +20,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Under version 2.15.0, this standard loading sequence will execute flawlessly
-MODEL = tf.keras.models.load_model("potato_model.keras")
+# --- PERFECT BYPASS: REBUILD MODEL CONTEXT MANUALLY ---
+def load_clean_prediction_model(model_path):
+    """
+    Loads structural layers dynamically to ignore broken serialization tags.
+    """
+    try:
+        # Load without compilation parameters to ignore config key blocks
+        base_model = tf.keras.models.load_model(model_path, compile=False, safe_mode=False)
+        
+        # Extract layers manually into a fresh memory container
+        inputs = tf.keras.layers.Input(shape=(256, 256, 3))
+        outputs = base_model(inputs, training=False)
+        
+        prediction_model = tf.keras.models.Model(inputs, outputs)
+        return prediction_model
+    except Exception:
+        # Fallback if functional layer architecture varies
+        return tf.keras.models.load_model(model_path, compile=False)
 
-CLASS_NAMES = ["Early Blight", "Late Blight", "Healthy","not_a_potato_leaf","not_potato"]
+# Reconstruct a clean runtime architecture instantly 
+MODEL = load_clean_prediction_model("potato_model.keras")
+
+CLASS_NAMES = ["Early Blight", "Late Blight", "Healthy", "not_a_potato_leaf", "not_potato"]
 
 @app.get("/ping")
 async def ping():
@@ -38,12 +57,13 @@ async def predict(
     file: UploadFile = File(...)
 ):
     image = read_file_as_image(await file.read())
-    img_batch = np.expand_dims(image, 0)
+    img = Image.fromarray(image).resize((256, 256))
+    img_batch = np.expand_dims(np.array(img), 0)
     
     predictions = MODEL.predict(img_batch)
 
-    predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
-    confidence = np.max(predictions[0])
+    predicted_class = CLASS_NAMES[np.argmax(predictions)]
+    confidence = np.max(predictions)
     return {
         'class': predicted_class,
         'confidence': float(confidence)
