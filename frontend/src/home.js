@@ -15,6 +15,9 @@ import { DropzoneArea } from 'material-ui-dropzone';
 import { common } from '@material-ui/core/colors';
 import Clear from '@material-ui/icons/Clear';
 
+
+
+
 const ColorButton = withStyles((theme) => ({
   root: {
     color: theme.palette.getContrastText(common.white),
@@ -24,6 +27,7 @@ const ColorButton = withStyles((theme) => ({
     },
   },
 }))(Button);
+const axios = require("axios").default;
 
 const useStyles = makeStyles((theme) => ({
   grow: {
@@ -139,7 +143,6 @@ const useStyles = makeStyles((theme) => ({
     color: '#be6a77 !important',
   }
 }));
-
 export const ImageUpload = () => {
   const classes = useStyles();
   const [selectedFile, setSelectedFile] = useState();
@@ -150,46 +153,20 @@ export const ImageUpload = () => {
   let confidence = 0;
 
   const sendFile = async () => {
-    if (image && selectedFile) {
-      setIsloading(true);
-      try {
-        let formData = new FormData();
-        
-        // Ensure we send the raw file object even if state contains an array wrap
-        const rawFile = Array.isArray(selectedFile) ? selectedFile[0] : selectedFile;
-        formData.append("file", rawFile);
-
-        // Ping the server to wake it up if it went cold
-        await fetch("https://onrender.com").catch(() => {});
-
-        // Process request using native fetch to avoid library mismatch bugs
-        const response = await fetch("https://onrender.com", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server returned status: ${response.status}`);
-        }
-
-        const resData = await response.json();
-        console.log("API RESPONSE:", resData);
-
-        setData({
-          class: resData.class,
-          confidence: resData.confidence,  
-        });
-
-      } catch (error) {
-        console.error("Prediction failed:", error);
-        alert("Server communication error. Check if your backend crashed or has CORS issues on Render.");
-        setData(undefined);
-        setImage(false);
-      } finally {
-        setIsloading(false);
+    if (image) {
+      let formData = new FormData();
+      formData.append("file", selectedFile);
+      let res = await axios({
+        method: "post",
+        url: process.env.REACT_APP_API_URL,
+        data: formData,
+      });
+      if (res.status === 200) {
+        setData(res.data);
       }
+      setIsloading(false);
     }
-  };
+  }
 
   const clearData = () => {
     setData(null);
@@ -203,8 +180,7 @@ export const ImageUpload = () => {
       setPreview(undefined);
       return;
     }
-    const fileToPreview = Array.isArray(selectedFile) ? selectedFile[0] : selectedFile;
-    const objectUrl = URL.createObjectURL(fileToPreview);
+    const objectUrl = URL.createObjectURL(selectedFile);
     setPreview(objectUrl);
   }, [selectedFile]);
 
@@ -212,6 +188,7 @@ export const ImageUpload = () => {
     if (!preview) {
       return;
     }
+    setIsloading(true);
     sendFile();
   }, [preview]);
 
@@ -222,19 +199,13 @@ export const ImageUpload = () => {
       setData(undefined);
       return;
     }
-    // Safely extract the raw file object from the array sequence
     setSelectedFile(files[0]);
     setData(undefined);
     setImage(true);
   };
 
   if (data) {
-    const parsedConfidence = parseFloat(data.confidence);
-    if (parsedConfidence <= 1.0) {
-      confidence = (parsedConfidence * 100).toFixed(2);
-    } else {
-      confidence = parsedConfidence.toFixed(2);
-    }
+    confidence = (parseFloat(data.confidence) * 100).toFixed(2);
   }
 
   return (
@@ -242,7 +213,7 @@ export const ImageUpload = () => {
       <AppBar position="static" className={classes.appbar}>
         <Toolbar>
           <Typography className={classes.title} variant="h6" noWrap>
-            AI-Based Potato Leaf Disease Detection System
+            CodeBasics: Potato Disease Classification
           </Typography>
           <div className={classes.grow} />
           <Avatar src={cblogo}></Avatar>
@@ -289,9 +260,7 @@ export const ImageUpload = () => {
                         <TableCell component="th" scope="row" className={classes.tableCell}>
                           {data.class}
                         </TableCell>
-                        <TableCell align="right" className={classes.tableCell}>
-                          {confidence}%
-                        </TableCell>
+                        <TableCell align="right" className={classes.tableCell}>{confidence}%</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -307,6 +276,7 @@ export const ImageUpload = () => {
           </Grid>
           {data &&
             <Grid item className={classes.buttonGrid} >
+
               <ColorButton variant="contained" className={classes.clearButton} color="primary" component="span" size="large" onClick={clearData} startIcon={<Clear fontSize="large" />}>
                 Clear
               </ColorButton>

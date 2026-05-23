@@ -1,8 +1,8 @@
-tensorflow-cpu==2.13.0
+tensorflow-cpu==2.16.1
 fastapi
 uvicorn
 python-multipart
-pillow
+Pillow
 matplotlib
 numpy
 
